@@ -24,11 +24,14 @@ const musicRouter = require('./routes/music')
 
 
 // Session Middleware setup
-const sessionMiddleware = session({
-  secret: `${process.env.SESSION_USER_KEYS}`,
-  resave: false,
-  saveUninitialized: false
-})
+const sessionMiddleware = cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_USER_KEYS],
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  // Optional: set other cookie options, such as secure and httpOnly
+  secure: true,
+  httpOnly: true
+});
 
 // Express do things
 app.use(sessionMiddleware)
