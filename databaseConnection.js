@@ -6,6 +6,7 @@ const dbConfig = {
 	user: process.env.DATABASE_USER || "developer",
 	password: process.env.DATABASE_PASSWORD || "bearman123",
 	database: process.env.DATABASE_DATABASE || "true_love_local",
+	port: process.env.DATABASE_PORT || 3306,
 	multipleStatements: false,
 	namedPlaceholders: true
 }
