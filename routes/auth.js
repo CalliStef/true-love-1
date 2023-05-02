@@ -87,9 +87,6 @@ router.get("/signup", (req, res) => {
 })
 
 
-// NOTE FOR SELF - Laurent
-// Use regex in the html form to verify that a user signs up with a username of 8 characters or less
-
 router.post("/signup", async (req, res) => {
   const session = getSession(req.session)
   console.log('post signup session', session)

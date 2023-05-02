@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const express = require("express")
 const bodyParser = require("body-parser")
-const cookieSession = require("cookie-session")
+const session = require("express-session")
 const app = express()
 
 const server = require('http').createServer(app)
@@ -24,14 +24,14 @@ const musicRouter = require('./routes/music')
 
 
 // Session Middleware setup
-const sessionMiddleware = cookieSession({
-  name: 'session',
-  keys: [process.env.SESSION_USER_KEYS],
-  maxAge: 24 * 60 * 60 * 1000, // 24 hours
-  // Optional: set other cookie options, such as secure and httpOnly
-  secure: true,
-  httpOnly: true
-});
+const sessionMiddleware = session({
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 * 1 // 1 week
+  },
+  secret: `${process.env.SESSION_USER_KEYS}`,
+  resave: false,
+  saveUninitialized: false
+})
 
 // Express do things
 app.use(sessionMiddleware)
@@ -102,18 +102,15 @@ io.on('connection', client => {
     handlers.socketStore(user.userId, client)
     console.log('join-room user: ', user)
     if (!user) {
-      // NEED TO DEAL WITH USERS HERE (handler failed to join user) - Laurent
       client.disconnect()
       return
     }
 
     let room = handlers.handleGetLobbyFromId(roomId)
     if (!room) {
-      // NEED TO DEAL WITH USERS HERE (handler failed to get room) - Laurent
       client.disconnect()
       return
     } else if (room.gameState.game_active === true) {
-      // NEED TO DEAL WITH USERS HERE (game is currently active) - Laurent
       client.disconnect()
       return
     } else if (room.kickedUsers[user.userId]) {
@@ -125,7 +122,6 @@ io.on('connection', client => {
 
     for (const client in clients) {
       if (clients[client].userId === user.userId) {
-        // NEED TO DEAL WITH USERS HERE (user is already in the game) - Laurent
         // client.disconnect()
         return
       }
@@ -134,11 +130,8 @@ io.on('connection', client => {
 
     // CREATE LOBBY
     io.to(client.id).emit('create-lobby', room, user.userId)
-    // console.log(`${client.id} emit create-lobby -> handle lobby-join`)
     handlers.handleLobbyJoin(roomId, client)
-    // console.log(`${client.id} handle-lobby-join -> client.join-room`)
     client.join(room.room_id)
-    // console.log(`${client.id} client.join-room -> emit user-joined`)
     io.to(room.room_id).emit('user-joined', user, room)
     let host = room.creator_socketId
     io.to(host).emit('create-kick-users', room)
@@ -341,7 +334,6 @@ io.on('connection', client => {
         nextPhase = 'victory'
       }
       console.log('trivia phase start')
-      // const response = await fetch(`https://opentdb.com/api.php?amount=${amount}&category=${id}&difficulty=${difficulty}&type=multiple&token=${room.token}`)
 
       console.log('amount', amount, 'id', id, 'difficulty', difficulty)
 
@@ -405,7 +397,6 @@ io.on('connection', client => {
       console.log('victory phase start')
 
       room.gameState.phase = 'victory'
-      // await handlers.handleGameSave(room)
       const victoryObject = await handlers.handleGetVictory(room)
       io.to(room.room_id).emit('create-victory', victoryObject)
       io.to(room.room_id).emit('setup-sidebar-victory', victoryObject)
